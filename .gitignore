@@ -28,3 +28,9 @@
 *.out
 *.app
 massif-cherrypick
+
+# massif outputs
+massif.out.*
+
+# Vim temporary files
+*.swp
