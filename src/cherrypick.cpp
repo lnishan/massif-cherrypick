@@ -91,6 +91,8 @@ int main(int argc, char *argv[]) {
 //		puts(nm_snap);
 		while (fgets(s, MAX_LEN, fi) && s[0] == '#') ;
 		while (fgets(s, MAX_LEN, fi) && strstr(s, "=") != NULL) ;
+		if (s[0] == '#') // empty heap tree, move on to the next snapshot
+			continue;
 		int cd = -1, d;
 		bool match;
 		do {
@@ -152,6 +154,8 @@ int main(int argc, char *argv[]) {
 		fprintf(fo, s);
 		while (fgets(s, MAX_LEN, fi) && strstr(s, "=") != NULL)
 			fprintf(fo, s);
+		if (s[0] == '#') // empty heap tree
+			continue;
 		
 		do {
 //			printf("%llu %s\n", sz_f[iter], s);
