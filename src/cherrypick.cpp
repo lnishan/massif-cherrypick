@@ -69,9 +69,11 @@ int main(int argc, char *argv[]) {
 	FILE *fi = fopen(argv[1], "r");
 	if (!fi) return 3;
 	lnNo_t i, len;
+	lnNo_t iter_heap = 0;
+	lnNo_t iter_snap = 0;
 	char s[MAX_LEN], nm_snap[MAX_LEN];
 
-	lnNo_t iter = 0, lns = 0;
+	lnNo_t lns = 0;
 	while (fgets(s, MAX_LEN, fi)) ++lns;
 	fclose(fi);
 	fi = fopen(argv[1], "r");
@@ -80,6 +82,8 @@ int main(int argc, char *argv[]) {
 	vector<dtSz_t> sz_o(lns);
 	vector<dtSz_t> sz_f(lns);
 	bool rd_success;
+	vector<dtSz_t> mem_heap;
+	mem_heap.reserve(1000);
 
 	printf("* Starts cherrypick-ing the input file ... ");
 	rd_success = fgets(s, MAX_LEN, fi);
@@ -87,6 +91,7 @@ int main(int argc, char *argv[]) {
 		vector<cp_state> stk;
 		while (rd_success && s[0] != '#') rd_success = fgets(s, MAX_LEN, fi);
 		if (!rd_success) break;
+		mem_heap.push_back(0);
 		fgets(nm_snap, MAX_LEN, fi);
 //		puts(nm_snap);
 		while (fgets(s, MAX_LEN, fi) && s[0] == '#') ;
@@ -112,10 +117,10 @@ int main(int argc, char *argv[]) {
 				--cd;
 				stk.pop_back();
 			}
-			sz_f[iter] = sz_o[iter] = getSz(s_real);
+			sz_f[iter_heap] = sz_o[iter_heap] = getSz(s_real);
 			match = (cd >= 0 ? stk[cd].match : false) || ( strstr(s_real, argv[2]) != NULL );
-			stk.push_back( cp_state(iter, match) );
-			++iter;
+			stk.push_back( cp_state(iter_heap, match) );
+			++iter_heap;
 			cd = d;
 //			puts("");
 		} while ( (rd_success = fgets(s, MAX_LEN, fi)) && s[0] != '#');
@@ -127,8 +132,9 @@ int main(int argc, char *argv[]) {
 				stk.pop_back();
 			}
 		}
+		mem_heap[iter_snap++] = sz_f[stk[0].line];
 	} while (rd_success);
-//	for (i = 0; i < iter; ++i) printf("%llu\n", sz_f[i]);
+//	for (i = 0; i < iter_heap; ++i) printf("%llu\n", sz_f[i]);
 	fclose(fi);
 	puts("Done");
 
@@ -136,7 +142,8 @@ int main(int argc, char *argv[]) {
 	printf("* Starts forging the new massif file ... ");
 	FILE *fo = fopen((string(argv[1]) + ".cherry").c_str(), "w");
 	fi = fopen(argv[1], "r");
-	iter = 0;
+	iter_heap = 0;
+	iter_snap = 0;
 	rd_success = fgets(s, MAX_LEN, fi);
 	do {
 		while (rd_success && s[0] != '#') {
@@ -151,17 +158,22 @@ int main(int argc, char *argv[]) {
 		
 		while (fgets(s, MAX_LEN, fi) && s[0] == '#')
 			fprintf(fo, s);
-		fprintf(fo, s);
-		while (fgets(s, MAX_LEN, fi) && strstr(s, "=") != NULL)
-			fprintf(fo, s);
+		fprintf(fo, s); // mem_heap_B not on the first line, so just replace below
+		while (fgets(s, MAX_LEN, fi) && strstr(s, "=") != NULL) {
+			if (strstr(s, "mem_heap_B") != NULL)
+				fprintf(fo, "mem_heap_B=%llu\n", mem_heap[iter_snap]);
+			else
+				fprintf(fo, s);
+		}
 		if (s[0] == '#') // empty heap tree
 			continue;
 		
 		do {
-//			printf("%llu %s\n", sz_f[iter], s);
-			printSz(fo, s, sz_f[iter]);
-			++iter;
+//			printf("%llu %s\n", sz_f[iter_heap], s);
+			printSz(fo, s, sz_f[iter_heap]);
+			++iter_heap;
 		} while ( (rd_success = fgets(s, MAX_LEN, fi)) && s[0] != '#');
+		++iter_snap;
 	} while (rd_success);
 	puts("Done");
 
