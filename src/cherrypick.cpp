@@ -183,6 +183,8 @@ int main(int argc, char *argv[]) {
 				fprintf(fo, "mem_heap_B=%llu\n", mem_heap[iter_snap] + (OPT_MERGE_STACKS ? mem_stacks[iter_snap] : 0));
 			else if (strstr(s, "mem_heap_extra_B") != NULL && OPT_CLEAR_HEAP_EXTRA)
 				fprintf(fo, "mem_heap_extra_B=0\n");
+			else if (strstr(s, "mem_stacks_B") != NULL && OPT_MERGE_STACKS)//
+				fprintf(fo, "mem_stacks_B=0\n");
 			else
 				fprintf(fo, s);
 		}
