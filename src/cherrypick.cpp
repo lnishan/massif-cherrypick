@@ -152,7 +152,6 @@ int main(int argc, char *argv[]) {
 		fprintf(fo, s);
 		while (fgets(s, MAX_LEN, fi) && strstr(s, "=") != NULL)
 			fprintf(fo, s);
-		fprintf(fo, s);
 		
 		do {
 //			printf("%llu %s\n", sz_f[iter], s);
