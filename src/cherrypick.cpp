@@ -66,9 +66,12 @@ int main(int argc, char *argv[]) {
 		return 2;
 	}
 	bool OPT_MERGE_STACKS = false;
+	bool OPT_CLEAR_HEAP_EXTRA = false;
 	for (int j = 3; j < argc; ++j)
 		if (strstr(argv[j], "--merge-stacks") != NULL)
 			OPT_MERGE_STACKS = true;
+		else if (strstr(argv[j], "--clear-heap-extra") != NULL)
+			OPT_CLEAR_HEAP_EXTRA = true;
 
 	FILE *fi = fopen(argv[1], "r");
 	if (!fi) return 3;
@@ -104,7 +107,7 @@ int main(int argc, char *argv[]) {
 		while (fgets(s, MAX_LEN, fi) && s[0] == '#') ;
 		while (fgets(s, MAX_LEN, fi) && strstr(s, "=") != NULL) {
 			if (OPT_MERGE_STACKS) {
-				if (strstr(s, "mem_stacks") != NULL) {
+				if (strstr(s, "mem_stacks_B") != NULL) {
 					for (i = 0; s[i] != '='; ++i) ;
 					mem_stacks[iter_snap] = 0;
 					for (i = i + 1; s[i] != '\n'; ++i)
@@ -178,6 +181,8 @@ int main(int argc, char *argv[]) {
 		while (fgets(s, MAX_LEN, fi) && strstr(s, "=") != NULL) {
 			if (strstr(s, "mem_heap_B") != NULL)
 				fprintf(fo, "mem_heap_B=%llu\n", mem_heap[iter_snap] + (OPT_MERGE_STACKS ? mem_stacks[iter_snap] : 0));
+			else if (strstr(s, "mem_heap_extra_B") != NULL && OPT_CLEAR_HEAP_EXTRA)
+				fprintf(fo, "mem_heap_extra_B=0\n");
 			else
 				fprintf(fo, s);
 		}
