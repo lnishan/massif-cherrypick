@@ -44,7 +44,7 @@ inline void printSz(FILE *fo, const char *s, dtSz_t sz_new) {
 	}
 	int top = i - 1;
 	for (i = 0; s[i] != ':'; ++i) fputc(s[i], fo);
-	for ( ; s[i] != ' '; ++i) fputc(s[i], fo);
+	for ( ; s[i] != ' '; ++i) fputc(s[i], fo);  fputc(s[i], fo);
 	int pos = i + 1;
 	for (i = top; i >= 0; --i) fputc(dgts[i] + 48, fo);
 	for (i = pos; s[i] >= 48 && s[i] <= 57; ++i) ;
