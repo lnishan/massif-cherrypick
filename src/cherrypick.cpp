@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 	vector<dtSz_t> sz_f(lns);
 	bool rd_success;
 
-	fgets(s, MAX_LEN, fi);
+	rd_success = fgets(s, MAX_LEN, fi);
 	do {
 		vector<cp_state> stk;
 		while (rd_success && s[0] != '#') rd_success = fgets(s, MAX_LEN, fi);
