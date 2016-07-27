@@ -65,6 +65,10 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Usage: ./cherrypick {massif_output_file} {pattern}\n");
 		return 2;
 	}
+	bool OPT_MERGE_STACKS = false;
+	for (int j = 3; j < argc; ++j)
+		if (strstr(argv[j], "--merge-stacks") != NULL)
+			OPT_MERGE_STACKS = true;
 
 	FILE *fi = fopen(argv[1], "r");
 	if (!fi) return 3;
@@ -84,6 +88,8 @@ int main(int argc, char *argv[]) {
 	bool rd_success;
 	vector<dtSz_t> mem_heap;
 	mem_heap.reserve(1000);
+	vector<dtSz_t> mem_stacks;
+	mem_stacks.reserve(1000);
 
 	printf("* Starts cherrypick-ing the input file ... ");
 	rd_success = fgets(s, MAX_LEN, fi);
@@ -92,10 +98,20 @@ int main(int argc, char *argv[]) {
 		while (rd_success && s[0] != '#') rd_success = fgets(s, MAX_LEN, fi);
 		if (!rd_success) break;
 		mem_heap.push_back(0);
+		mem_stacks.push_back(0);
 		fgets(nm_snap, MAX_LEN, fi);
 //		puts(nm_snap);
 		while (fgets(s, MAX_LEN, fi) && s[0] == '#') ;
-		while (fgets(s, MAX_LEN, fi) && strstr(s, "=") != NULL) ;
+		while (fgets(s, MAX_LEN, fi) && strstr(s, "=") != NULL) {
+			if (OPT_MERGE_STACKS) {
+				if (strstr(s, "mem_stacks") != NULL) {
+					for (i = 0; s[i] != '='; ++i) ;
+					mem_stacks[iter_snap] = 0;
+					for (i = i + 1; s[i] != '\n'; ++i)
+						mem_stacks[iter_snap] = mem_stacks[iter_snap] * 10 + s[i] - 48;
+				}
+			}
+		}
 		if (s[0] == '#') // empty heap tree, move on to the next snapshot
 			continue;
 		int cd = -1, d;
@@ -161,7 +177,7 @@ int main(int argc, char *argv[]) {
 		fprintf(fo, s); // mem_heap_B not on the first line, so just replace below
 		while (fgets(s, MAX_LEN, fi) && strstr(s, "=") != NULL) {
 			if (strstr(s, "mem_heap_B") != NULL)
-				fprintf(fo, "mem_heap_B=%llu\n", mem_heap[iter_snap]);
+				fprintf(fo, "mem_heap_B=%llu\n", mem_heap[iter_snap] + (OPT_MERGE_STACKS ? mem_stacks[iter_snap] : 0));
 			else
 				fprintf(fo, s);
 		}
@@ -170,7 +186,7 @@ int main(int argc, char *argv[]) {
 		
 		do {
 //			printf("%llu %s\n", sz_f[iter_heap], s);
-			printSz(fo, s, sz_f[iter_heap]);
+			printSz(fo, s, sz_f[iter_heap] + (s[0] != ' ' && OPT_MERGE_STACKS ? mem_stacks[iter_snap] : 0));
 			++iter_heap;
 		} while ( (rd_success = fgets(s, MAX_LEN, fi)) && s[0] != '#');
 		++iter_snap;
