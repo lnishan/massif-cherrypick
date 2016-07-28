@@ -1,6 +1,6 @@
 # massif-cherrypick
 
-🍒 A massif (valgrind) extension to analyze memory consumptions for only specific functions.
+🍒 A massif (valgrind) extension to analyze memory consumptions of only specific functions.
 
 massif-cherrypick takes an massif.out file, and  
 **forges** a new one containing only stats from functions that match the specified pattern.
