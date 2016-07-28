@@ -8,6 +8,7 @@
 
 using std::vector;
 using std::string;
+using std::max;
 
 typedef unsigned long long lnNo_t;
 typedef unsigned long long dtSz_t;
@@ -89,6 +90,7 @@ int main(int argc, char *argv[]) {
 	vector<dtSz_t> sz_o(lns);
 	vector<dtSz_t> sz_f(lns);
 	bool rd_success;
+	dtSz_t mem_peak = 0;
 	vector<dtSz_t> mem_heap;
 	mem_heap.reserve(1000);
 	vector<dtSz_t> mem_stacks;
@@ -179,9 +181,11 @@ int main(int argc, char *argv[]) {
 			fprintf(fo, s);
 		fprintf(fo, s); // mem_heap_B not on the first line, so just replace below
 		while (fgets(s, MAX_LEN, fi) && strstr(s, "=") != NULL) {
-			if (strstr(s, "mem_heap_B") != NULL)
-				fprintf(fo, "mem_heap_B=%llu\n", mem_heap[iter_snap] + (OPT_MERGE_STACKS ? mem_stacks[iter_snap] : 0));
-			else if (strstr(s, "mem_heap_extra_B") != NULL && OPT_CLEAR_HEAP_EXTRA)
+			if (strstr(s, "mem_heap_B") != NULL) {
+				dtSz_t mem_tot = mem_heap[iter_snap] + (OPT_MERGE_STACKS ? mem_stacks[iter_snap] : 0);
+				fprintf(fo, "mem_heap_B=%llu\n", mem_tot);
+				mem_peak = max(mem_peak, mem_tot);
+			} else if (strstr(s, "mem_heap_extra_B") != NULL && OPT_CLEAR_HEAP_EXTRA)
 				fprintf(fo, "mem_heap_extra_B=0\n");
 			else if (strstr(s, "mem_stacks_B") != NULL && OPT_MERGE_STACKS)//
 				fprintf(fo, "mem_stacks_B=0\n");
@@ -199,6 +203,7 @@ int main(int argc, char *argv[]) {
 		++iter_snap;
 	} while (rd_success);
 	puts("Done");
+	printf("Peak memory = %llu\n", mem_peak);
 
 	return 0;
 }
