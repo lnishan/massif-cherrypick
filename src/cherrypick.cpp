@@ -5,10 +5,13 @@
 #include <cstdlib>
 #include <algorithm>
 #include <vector>
+#include <regex>
 
 using std::vector;
 using std::string;
 using std::max;
+using std::regex;
+using std::regex_match;
 
 typedef unsigned long long lnNo_t;
 typedef unsigned long long dtSz_t;
@@ -139,7 +142,7 @@ int main(int argc, char *argv[]) {
 				stk.pop_back();
 			}
 			sz_f[iter_heap] = sz_o[iter_heap] = getSz(s_real);
-			match = (cd >= 0 ? stk[cd].match : false) || ( strstr(s_real, argv[2]) != NULL );
+			match = (cd >= 0 ? stk[cd].match : false) || regex_search(s_real, regex(argv[2]));
 			stk.push_back( cp_state(iter_heap, match) );
 			++iter_heap;
 			cd = d;

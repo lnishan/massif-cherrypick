@@ -26,6 +26,8 @@ make
 ./massif-cherrypick {massif.out file} {pattern} [--merge-stacks] [--clear-heap-extra]
 ```
 
+{pattern} supports Regular Expression.
+
 
 ## Sample Usage
 
