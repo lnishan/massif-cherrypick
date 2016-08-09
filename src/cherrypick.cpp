@@ -158,6 +158,8 @@ int main(int argc, char *argv[]) {
 		}
 		mem_heap[iter_snap++] = sz_f[stk[0].line];
 	} while (rd_success);
+	mem_heap.push_back(0);
+	mem_stacks.push_back(0);
 //	for (i = 0; i < iter_heap; ++i) printf("%llu\n", sz_f[i]);
 	fclose(fi);
 	puts("Done");
