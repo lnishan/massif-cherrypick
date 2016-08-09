@@ -9,7 +9,7 @@ The new massif.out file can then be used with `ms_print`, `massif-visualizer` or
 
 ## Dependencies
 
-- g++
+- g++ 4.8+
 - ... and nothing else
 
 
