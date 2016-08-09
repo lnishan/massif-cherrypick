@@ -17,8 +17,9 @@ typedef unsigned long long lnNo_t;
 typedef unsigned long long dtSz_t;
 
 struct cp_state {
-	cp_state(lnNo_t _line, bool _match): line(_line), match(_match) {}
+	cp_state(lnNo_t _line, bool _match, bool _isLeaf = true): line(_line), match(_match), isLeaf(_isLeaf) {}
 
+	bool isLeaf;
 	lnNo_t line;
 	bool match;
 };
@@ -129,21 +130,20 @@ int main(int argc, char *argv[]) {
 			for (len = d; s[len]; ++len) ;
 			char *s_real = s + d;
 //			printf(s_real);
-			if (d <= cd && !stk[cd].match) {
-				sz_f[stk[cd].line] -= sz_o[stk[cd].line];
-				while (d <= cd && cd > 0 && !stk[cd].match) {
-					sz_f[stk[cd - 1].line] -= sz_o[stk[cd].line];
-					--cd;
-					stk.pop_back();
-				}
-			}
 			while (d <= cd) {
+				if (!stk[cd].match) {
+					if (stk[cd].isLeaf)
+						sz_f[stk[cd].line] = 0;
+					if (cd > 0)
+						sz_f[stk[cd - 1].line] -= (sz_o[stk[cd].line] - sz_f[stk[cd].line]);
+				}	
 				--cd;
 				stk.pop_back();
 			}
 			sz_f[iter_heap] = sz_o[iter_heap] = getSz(s_real);
 			match = (cd >= 0 ? stk[cd].match : false) || regex_search(s_real, regex(argv[2]));
-			stk.push_back( cp_state(iter_heap, match) );
+			if (cd >= 0) stk[cd].isLeaf = false;
+			stk.push_back( cp_state(iter_heap, match, true) );
 			++iter_heap;
 			cd = d;
 //			puts("");
