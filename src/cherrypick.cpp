@@ -1,65 +1,7 @@
-#include <iostream>
-#include <string>
-#include <cstdio>
-#include <cstring>
-#include <cstdlib>
-#include <algorithm>
-#include <vector>
-#include <regex>
-
-using std::vector;
-using std::string;
-using std::max;
-using std::regex;
-using std::regex_match;
-
-typedef unsigned long long lnNo_t;
-typedef unsigned long long dtSz_t;
-
-struct cp_state {
-	cp_state(lnNo_t _line, bool _match, bool _isLeaf = true): line(_line), match(_match), isLeaf(_isLeaf) {}
-
-	bool isLeaf;
-	lnNo_t line;
-	bool match;
-};
-
-inline dtSz_t getSz(const char *s) {
-	int i;
-	dtSz_t ret = 0;
-	for (i = 0; s[i] != ':'; ++i) ;
-	for ( ; s[i] != ' '; ++i) ;
-	for ( ; s[i] < 48 || s[i] > 57; ++i) ;
-	for ( ; s[i] >= 48 && s[i] <= 57; ++i)
-		ret = ret * 10 + s[i] - 48;
-//	printf(s);
-//	printf("%llu\n", ret);
-	return ret;
-}
-
-inline void printSz(FILE *fo, const char *s, dtSz_t sz_new) {
-	int i;
-	char dgts[50];
-	if (sz_new > 0) {
-		for (i = 0; sz_new; sz_new /= 10)
-			dgts[i++] = sz_new % 10;
-	} else {
-		dgts[0] = 0;
-		i = 1;
-	}
-	int top = i - 1;
-	for (i = 0; s[i] != ':'; ++i) fputc(s[i], fo);
-	for ( ; s[i] != ' '; ++i) fputc(s[i], fo);  fputc(s[i], fo);
-	int pos = i + 1;
-	for (i = top; i >= 0; --i) fputc(dgts[i] + 48, fo);
-	for (i = pos; s[i] >= 48 && s[i] <= 57; ++i) ;
-	for ( ; s[i]; ++i) fputc(s[i], fo);
-}
+#include <cherrypick.h>
 
 
-const int MAX_LEN  = 1002;
-
-int main(int argc, char *argv[]) {
+int cp_picker::parse_args(int argc, char *argv[]) {
 	if (argc < 2) {
 		fprintf(stderr, "* Please specify the massif output file!\n");
 		fprintf(stderr, "Usage: ./cherrypick {massif_output_file} {pattern}\n");
@@ -78,30 +20,36 @@ int main(int argc, char *argv[]) {
 		else if (strstr(argv[j], "--clear-heap-extra") != NULL)
 			OPT_CLEAR_HEAP_EXTRA = true;
 
-	FILE *fi = fopen(argv[1], "r");
+	filename = argv[1];
+	pattern = argv[2];
+
+	fi = fopen(filename, "r");
 	if (!fi) return 3;
+	
+	return 0;
+}
+
+void cp_picker::initialize() {
+	char s[MAX_LEN];
+	lns = 0;
+	while (fgets(s, MAX_LEN, fi)) ++lns;
+	fclose(fi);
+	fi = fopen(filename, "r");
+	printf("Total lines = %llu\n", lns);
+	
+	mem_peak = 0;
+	mem_heap.reserve(1000);
+	mem_stacks.reserve(1000);
+}
+
+void cp_picker::cherrypick() {
 	lnNo_t i, len;
+	sz_o.resize(lns);
+	sz_f.resize(lns);
 	lnNo_t iter_heap = 0;
 	lnNo_t iter_snap = 0;
 	char s[MAX_LEN], nm_snap[MAX_LEN];
-
-	lnNo_t lns = 0;
-	while (fgets(s, MAX_LEN, fi)) ++lns;
-	fclose(fi);
-	fi = fopen(argv[1], "r");
-	printf("Total lines = %llu\n", lns);
-	
-	vector<dtSz_t> sz_o(lns);
-	vector<dtSz_t> sz_f(lns);
-	bool rd_success;
-	dtSz_t mem_peak = 0;
-	vector<dtSz_t> mem_heap;
-	mem_heap.reserve(1000);
-	vector<dtSz_t> mem_stacks;
-	mem_stacks.reserve(1000);
-
-	printf("* Starts cherrypick-ing the input file ... ");
-	rd_success = fgets(s, MAX_LEN, fi);
+	bool rd_success = fgets(s, MAX_LEN, fi);
 	do {
 		vector<cp_state> stk;
 		while (rd_success && s[0] != '#') rd_success = fgets(s, MAX_LEN, fi);
@@ -141,7 +89,7 @@ int main(int argc, char *argv[]) {
 				stk.pop_back();
 			}
 			sz_f[iter_heap] = sz_o[iter_heap] = getSz(s_real);
-			match = (cd >= 0 ? stk[cd].match : false) || regex_search(s_real, regex(argv[2]));
+			match = (cd >= 0 ? stk[cd].match : false) || regex_search(s_real, regex(pattern));
 			if (cd >= 0) stk[cd].isLeaf = false;
 			stk.push_back( cp_state(iter_heap, match, true) );
 			++iter_heap;
@@ -162,15 +110,16 @@ int main(int argc, char *argv[]) {
 	mem_stacks.push_back(0);
 //	for (i = 0; i < iter_heap; ++i) printf("%llu\n", sz_f[i]);
 	fclose(fi);
-	puts("Done");
+}
 
-	// starts forging the new massif file
-	printf("* Starts forging the new massif file ... ");
-	FILE *fo = fopen((string(argv[1]) + ".cherry").c_str(), "w");
-	fi = fopen(argv[1], "r");
-	iter_heap = 0;
-	iter_snap = 0;
-	rd_success = fgets(s, MAX_LEN, fi);
+void cp_picker::forge() {
+	lnNo_t i, len;
+	fo = fopen((string(filename) + ".cherry").c_str(), "w");
+	fi = fopen(filename, "r");
+	lnNo_t iter_heap = 0;
+	lnNo_t iter_snap = 0;
+	char s[MAX_LEN], nm_snap[MAX_LEN];
+	bool rd_success = fgets(s, MAX_LEN, fi);
 	do {
 		while (rd_success && s[0] != '#') {
 			fprintf(fo, s);
@@ -207,8 +156,66 @@ int main(int argc, char *argv[]) {
 		} while ( (rd_success = fgets(s, MAX_LEN, fi)) && s[0] != '#');
 		++iter_snap;
 	} while (rd_success);
+}
+
+dtSz_t cp_picker::get_mem_peak() {
+	return mem_peak;
+}
+
+
+inline dtSz_t getSz(const char *s) {
+	int i;
+	dtSz_t ret = 0;
+	for (i = 0; s[i] != ':'; ++i) ;
+	for ( ; s[i] != ' '; ++i) ;
+	for ( ; s[i] < 48 || s[i] > 57; ++i) ;
+	for ( ; s[i] >= 48 && s[i] <= 57; ++i)
+		ret = ret * 10 + s[i] - 48;
+//	printf(s);
+//	printf("%llu\n", ret);
+	return ret;
+}
+
+inline void printSz(FILE *fo, const char *s, dtSz_t sz_new) {
+	int i;
+	char dgts[50];
+	if (sz_new > 0) {
+		for (i = 0; sz_new; sz_new /= 10)
+			dgts[i++] = sz_new % 10;
+	} else {
+		dgts[0] = 0;
+		i = 1;
+	}
+	int top = i - 1;
+	for (i = 0; s[i] != ':'; ++i) fputc(s[i], fo);
+	for ( ; s[i] != ' '; ++i) fputc(s[i], fo);  fputc(s[i], fo);
+	int pos = i + 1;
+	for (i = top; i >= 0; --i) fputc(dgts[i] + 48, fo);
+	for (i = pos; s[i] >= 48 && s[i] <= 57; ++i) ;
+	for ( ; s[i]; ++i) fputc(s[i], fo);
+}
+
+
+
+int main(int argc, char *argv[]) {
+
+	cp_picker me;
+	
+	int res_parse = me.parse_args(argc, argv);
+	if (res_parse) // invalid arguments
+		return res_parse;
+
+	me.initialize();
+
+	printf("* Starts cherrypick-ing the input file ... ");
+	me.cherrypick();
 	puts("Done");
-	printf("Peak memory = %llu\n", mem_peak);
+
+	// starts forging the new massif file
+	printf("* Starts forging the new massif file ... ");
+	me.forge();
+	puts("Done");
+	printf("Peak memory = %llu\n", me.get_mem_peak());
 
 	return 0;
 }
