@@ -69,7 +69,9 @@ void cp_picker::cherrypick() {
 				}
 			}
 		}
-		if (feof(fi) || s[0] == '#') // empty heap tree, move on to the next snapshot
+		if (feof(fi)) // empty heap tree and end-of-file
+			break;
+		if (s[0] == '#') // empty heap tree, move on to the next snapshot
 			continue;
 		int cd = -1, d;
 		bool match;
@@ -146,7 +148,9 @@ void cp_picker::forge() {
 			else
 				fprintf(fo, s);
 		}
-		if (feof(fi) || s[0] == '#') // empty heap tree
+		if (feof(fi)) // empty heap tree and end-of-file
+			break;
+		if (s[0] == '#') // empty heap tree
 			continue;
 		
 		do {
