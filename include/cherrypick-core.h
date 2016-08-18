@@ -1,11 +1,14 @@
-#include <iostream>
-#include <string>
-#include <cstdio>
-#include <cstring>
-#include <cstdlib>
+#ifndef MASSIF_CHERRYPICK_CORE_H
+#define MASSIF_CHERRYPICK_CORE_H
+
 #include <algorithm>
-#include <vector>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
 #include <regex>
+#include <string>
+#include <vector>
 
 using std::vector;
 using std::string;
@@ -13,50 +16,56 @@ using std::max;
 using std::regex;
 using std::regex_match;
 
-typedef unsigned long long lnNo_t;
-typedef unsigned long long dtSz_t;
+typedef unsigned long long lineNo_t;
+typedef unsigned long long dataSz_t;
 
 struct cp_state {
-	cp_state(lnNo_t _line, bool _match, bool _isLeaf = true): line(_line), match(_match), isLeaf(_isLeaf) {}
+    cp_state(lineNo_t _line, bool _match, bool _isLeaf = true)
+        : line(_line)
+        , match(_match)
+        , isLeaf(_isLeaf)
+    {
+    }
 
-	bool isLeaf;
-	lnNo_t line;
-	bool match;
+    bool isLeaf;
+    lineNo_t line;
+    bool match;
 };
 
 class cp_picker {
-	public:
-		cp_picker(): 
-			OPT_MERGE_STACKS(false),
-			OPT_CLEAR_HEAP_EXTRA(false) {
+public:
+    cp_picker()
+        : OPT_MERGE_STACKS(false)
+        , OPT_CLEAR_HEAP_EXTRA(false)
+    {
+    }
+    int parse_args(int argc, char* argv[]);
+    void initialize();
+    void cherrypick();
+    void forge();
 
-		}
-		int parse_args(int argc, char *argv[]);
-		void initialize();
-		void cherrypick();
-		void forge();
+    dataSz_t get_mem_peak();
 
-		dtSz_t get_mem_peak();
-	
-	private:
-static const int MAX_LEN  = 1002;
+private:
+    static const int MAX_LEN = 1002;
 
-		FILE *fi, *fo;
+    FILE *fi, *fo;
 
-		char *filename;
-		char *pattern;
-		bool OPT_MERGE_STACKS;
-		bool OPT_CLEAR_HEAP_EXTRA;
+    char* filename;
+    char* pattern;
+    bool OPT_MERGE_STACKS;
+    bool OPT_CLEAR_HEAP_EXTRA;
 
-		lnNo_t lns;
+    lineNo_t lns;
 
-		vector<dtSz_t> sz_o;
-		vector<dtSz_t> sz_f;
-		vector<dtSz_t> mem_heap;
-		vector<dtSz_t> mem_stacks;
-		dtSz_t mem_peak;
+    vector<dataSz_t> sz_o;
+    vector<dataSz_t> sz_f;
+    vector<dataSz_t> mem_heap;
+    vector<dataSz_t> mem_stacks;
+    dataSz_t mem_peak;
 };
 
-inline dtSz_t getSz(const char *s);
-inline void printSz(FILE *fo, const char *s, dtSz_t sz_new);
+inline dataSz_t getSz(const char* s);
+inline void printSz(FILE* fo, const char* s, dataSz_t sz_new);
 
+#endif
