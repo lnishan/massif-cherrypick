@@ -1,0 +1,25 @@
+#!/bin/bash
+
+args="$@"
+
+if [ "$args" = '-h' ] || [ "$args" = '--help' ]; then
+	echo "Usage: ./cherrypick {keyword} {program} {arguments}"
+	exit
+fi
+
+keyword=`echo "$args" | cut -d ' ' -f 1`
+prog=`echo "$args" | cut -d ' ' -f 2-`
+
+output=`valgrind --tool=massif --detailed-freq=1 $prog 2>&1`
+# echo "$output"
+
+pid=`echo "$output" | tail -1 | cut -d '=' -f3`
+# echo "$pid"
+
+
+if [ ! -e 'massif-cherrypick' ]; then
+	make -s
+fi
+
+./massif-cherrypick massif.out.$pid $keyword --visualize
+
