@@ -185,7 +185,9 @@ void cp_picker::forge() {
     ++iter_snap;
   } while (rd_success);
   fclose(fo);
-  fclose(focsv);
+  if (OPT_VISUALIZE) {
+    fclose(focsv);
+  }
 }
 
 dataSz_t cp_picker::get_mem_peak() { return mem_peak; }
