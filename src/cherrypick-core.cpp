@@ -18,6 +18,8 @@ int cp_picker::parse_args(int argc, char* argv[]) {
       OPT_MERGE_STACKS = true;
     else if (strstr(argv[j], "--clear-heap-extra") != NULL)
       OPT_CLEAR_HEAP_EXTRA = true;
+	else if (strstr(argv[j], "--visualize") != NULL)
+	  OPT_VISUALIZE = true;
 
   filename = argv[1];
   pattern = argv[2];
@@ -39,6 +41,11 @@ void cp_picker::initialize() {
   mem_peak = 0;
   mem_heap.reserve(1000);
   mem_stacks.reserve(1000);
+
+  if (OPT_VISUALIZE) {
+    focsv = fopen("plotly/data.csv", "w");
+    fprintf(focsv, "x,y1,y2\n");
+  }
 }
 
 void cp_picker::cherrypick() {
@@ -134,11 +141,28 @@ void cp_picker::forge() {
 
     while (fgets(s, MAX_LEN, fi) && s[0] == '#') fprintf(fo, s);
     fprintf(fo, s);  // mem_heap_B not on the first line, so just replace below
+	if (OPT_VISUALIZE) {
+		if (strstr(s, "time") != NULL) {
+			for (i = 0; s[i] != '='; ++i)
+				;
+			for (i = i + 1; s[i] != '\n'; ++i)
+				fputc(s[i], focsv);
+			fputc(',', focsv);
+		}
+	}
     while (fgets(s, MAX_LEN, fi) && strstr(s, "=") != NULL) {
       if (strstr(s, "mem_heap_B") != NULL) {
         dataSz_t mem_tot = mem_heap[iter_snap] +
                            (OPT_MERGE_STACKS ? mem_stacks[iter_snap] : 0);
         fprintf(fo, "mem_heap_B=%llu\n", mem_tot);
+		if (OPT_VISUALIZE) {
+          for (i = 0; s[i] != '='; ++i)
+            ;
+          for (i = i + 1; s[i] != '\n'; ++i)
+            fputc(s[i], focsv);
+          fputc(',', focsv);
+			fprintf(focsv, "%llu\n", mem_tot);
+		}
         mem_peak = max(mem_peak, mem_tot);
       } else if (strstr(s, "mem_heap_extra_B") != NULL && OPT_CLEAR_HEAP_EXTRA)
         fprintf(fo, "mem_heap_extra_B=0\n");
@@ -160,6 +184,8 @@ void cp_picker::forge() {
     } while ((rd_success = fgets(s, MAX_LEN, fi)) && s[0] != '#');
     ++iter_snap;
   } while (rd_success);
+  fclose(fo);
+  fclose(focsv);
 }
 
 dataSz_t cp_picker::get_mem_peak() { return mem_peak; }
