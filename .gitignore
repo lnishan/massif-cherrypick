@@ -34,3 +34,6 @@ massif.out.*
 
 # Vim temporary files
 *.swp
+
+# massif-visualizer outputs
+plotly/data.csv
