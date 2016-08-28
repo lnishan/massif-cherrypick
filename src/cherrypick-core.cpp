@@ -38,6 +38,8 @@ void cp_picker::initialize() {
   fi = fopen(filename, "r");
   printf("Total lines = %llu\n", lns);
 
+  sz_o.resize(lns);
+  sz_f.resize(lns);
   mem_peak = 0;
   mem_heap.reserve(1000);
   mem_stacks.reserve(1000);
@@ -50,8 +52,6 @@ void cp_picker::initialize() {
 
 void cp_picker::cherrypick() {
   lineNo_t i, len;
-  sz_o.resize(lns);
-  sz_f.resize(lns);
   lineNo_t iter_heap = 0;
   lineNo_t iter_snap = 0;
   char s[MAX_LEN], nm_snap[MAX_LEN];
