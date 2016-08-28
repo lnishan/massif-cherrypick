@@ -21,14 +21,18 @@ var traceTot = {
   x:unpack(rows, 'x'),  y: unpack(rows, 'y1'), 
   name: 'Total Memory',
   fill: 'tonexty',
-  type: 'scatter'
+  fillcolor: 'rgb(52, 187, 255)', 
+  type: 'scatter',
+  mode: 'none',
 };
 
 var traceCherry = {
   x:unpack(rows, 'x'),  y: unpack(rows, 'y2'), 
   name: 'Cherrypick\'d Memory',
   fill: 'tonexty',
-  type: 'scatter'
+  fillcolor: 'rgb(146, 96, 209)', 
+  type: 'scatter',
+  mode: 'none'
 };
 
 var data = [traceCherry,traceTot];
