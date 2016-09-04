@@ -30,7 +30,10 @@ struct cp_state {
 
 class cp_picker {
  public:
-  cp_picker() : OPT_MERGE_STACKS(false), OPT_CLEAR_HEAP_EXTRA(false), OPT_VISUALIZE(false) {}
+  cp_picker()
+      : OPT_MERGE_STACKS(false),
+        OPT_CLEAR_HEAP_EXTRA(false),
+        OPT_VISUALIZE(false) {}
   int parse_args(int argc, char* argv[]);
   void initialize();
   void cherrypick();
@@ -42,7 +45,7 @@ class cp_picker {
   static const int MAX_LEN = 1002;
 
   FILE *fi, *fo;
-  FILE *focsv;
+  FILE* focsv;
 
   char* filename;
   char* pattern;
