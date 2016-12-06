@@ -11,8 +11,12 @@ int cp_picker::parse_args(int argc, char* argv[]) {
     fprintf(stderr, "Usage: ./cherrypick {massif_output_file} {pattern}\n");
     return 2;
   }
-  bool OPT_MERGE_STACKS = false;
-  bool OPT_CLEAR_HEAP_EXTRA = false;
+/*
+ * (initialized in constructor)
+  OPT_MERGE_STACKS = false;
+  OPT_CLEAR_HEAP_EXTRA = false;
+  OPT_VISUALIZE = false;
+ */
   for (int j = 3; j < argc; ++j)
     if (strstr(argv[j], "--merge-stacks") != NULL)
       OPT_MERGE_STACKS = true;
